@@ -51,7 +51,6 @@ Check the CMake configure output for details.
   * (win) http://www.python.org/downloads/windows
   * (deb) `sudo apt install libpython2.7-dev`
   * (mac) preinstalled with osx
-  * (for pybind11) `git submodule init && git submodule update`
   * (useful modules) `sudo python -mpip install numpy pyopengl Pillow pybind11`
 
 * Wayland

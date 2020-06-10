@@ -290,47 +290,49 @@ endif()
 
 option(BUILD_PANGOLIN_PYTHON "Build support for Pangolin Interactive Console" ON)
 if(BUILD_PANGOLIN_PYTHON AND BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS AND NOT _WIN_)
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/pybind11/CMakeLists.txt")
-      add_subdirectory("../external/pybind11" "${CMAKE_CURRENT_BINARY_DIR}/external/pybind11")
-      set( pybind11_FOUND true)
-  else()
-      find_package(pybind11 QUIET)
+  include(FetchContent)
+  FetchContent_Declare(
+    pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG e43e1cc01ae6d4e4e5ba10557a057d7f3d5ece0d)
+  if(NOT pybind11_POPULATED)
+    FetchContent_Populate(pybind11)
+    add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR}
+                     EXCLUDE_FROM_ALL)
   endif()
 
-  if(pybind11_FOUND)
-    set(HAVE_PYTHON 1)
+  set(HAVE_PYTHON 1)
 
-    file(GLOB pypangolin_SRC "python/pypangolin/*.cpp" )
-    file(GLOB pypangolin_HDR "python/pypangolin/*.hpp" )
-    list(APPEND HEADERS
-        ${INCDIR}/console/ConsoleInterpreter.h
-        ${INCDIR}/console/ConsoleView.h
-        ${INCDIR}/python/pyinterpreter.h
-        ${INCDIR}/python/pypangolin_init.h
-        ${INCDIR}/python/pyuniqueobj.h
-        ${INCDIR}/python/pyvar.h
-        ${INCDIR}/python/pypangoio.h
-        ${pypangolin_HDR}
-    )
-    list(APPEND SOURCES
-        console/ConsoleView.cpp
-        python/pyinterpreter.cpp
-        python/pypangolin_init.cpp
-        ${pypangolin_SRC}
-    )
+  file(GLOB pypangolin_SRC "python/pypangolin/*.cpp" )
+  file(GLOB pypangolin_HDR "python/pypangolin/*.hpp" )
+  list(APPEND HEADERS
+      ${INCDIR}/console/ConsoleInterpreter.h
+      ${INCDIR}/console/ConsoleView.h
+      ${INCDIR}/python/pyinterpreter.h
+      ${INCDIR}/python/pypangolin_init.h
+      ${INCDIR}/python/pyuniqueobj.h
+      ${INCDIR}/python/pyvar.h
+      ${INCDIR}/python/pypangoio.h
+      ${pypangolin_HDR}
+  )
+  list(APPEND SOURCES
+      console/ConsoleView.cpp
+      python/pyinterpreter.cpp
+      python/pypangolin_init.cpp
+      ${pypangolin_SRC}
+  )
 
-    # pybind11 stuff
-    list(APPEND INTERNAL_INC ${PYBIND11_INCLUDE_DIR})
-    list(APPEND LINK_LIBS PRIVATE ${pybind11_LIBRARIES})
+  # pybind11 stuff
+  list(APPEND INTERNAL_INC ${PYBIND11_INCLUDE_DIR})
+  list(APPEND LINK_LIBS PRIVATE ${pybind11_LIBRARIES})
 
-    if(_GCC_)
-        set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
-        set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
-    endif()
-    list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIRS})
-    list(APPEND LINK_LIBS    ${PYTHON_LIBRARIES})
-    message(STATUS "Python Found and Enabled (with pybind11)")
+  if(_GCC_)
+      set_source_files_properties(python/PyInterpreter.cpp    PROPERTIES COMPILE_FLAGS "-Wno-missing-field-initializers")
+      set_source_files_properties(python/PyModulePangolin.cpp PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing -Wno-missing-field-initializers")
   endif()
+  list(APPEND INTERNAL_INC ${PYTHON_INCLUDE_DIRS})
+  list(APPEND LINK_LIBS    ${PYTHON_LIBRARIES})
+  message(STATUS "Python Found and Enabled (with pybind11)")
 endif()
 
 option(BUILD_PANGOLIN_EIGEN "Build support for Eigen matrix types" ON)
