@@ -6,6 +6,17 @@ set(PANGOLIN_VERSION ${PANGOLIN_VERSION_MAJOR}.${PANGOLIN_VERSION_MINOR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 
+# Check if this CMakeLists is being used directly or via add_subdirectory
+set(PANGOLIN_MASTER_PROJECT OFF)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(PANGOLIN_MASTER_PROJECT ON)
+endif()
+# Allow for parent CMakeLists to populate the outgoing targets file
+if(NOT PANGOLIN_EXPORT_NAME)
+  set(PANGOLIN_EXPORT_NAME "${PROJECT_NAME}Targets")
+endif()
+message(STATUS "[Pangolin]:: Export name is ${PANGOLIN_EXPORT_NAME}")
+
 # Platform configuration vars
 include(SetPlatformVars)
 

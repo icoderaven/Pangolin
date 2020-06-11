@@ -633,6 +633,8 @@ endif()
 set(INSTALL_INCLUDE_DIR "include")
 
 add_library(${LIBRARY_NAME} ${SOURCES} ${HEADERS})
+# add alias to match exported target when calling using add_subdirectory()
+add_library(Pangolin::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
 # 'System' includes shield us from warnings in those includes.
 target_include_directories(${LIBRARY_NAME} SYSTEM PUBLIC ${USER_INC} PRIVATE ${INTERNAL_INC})
 target_include_directories(${LIBRARY_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -715,17 +717,19 @@ endif()
 #######################################################
 
 # This relative path allows installed files to be relocatable.
-set( CMAKECONFIG_INSTALL_DIR lib/cmake/${PROJECT_NAME} )
+set( CMAKECONFIG_INSTALL_DIR share/cmake/${PROJECT_NAME} )
 file( RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKE_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}"
     "${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}"
 )
 
+if(PANGOLIN_MASTER_PROJECT)
 # Export library for easy inclusion from other cmake projects. APPEND allows
 # call to function even as subdirectory of larger project.
 FILE(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 export( TARGETS ${LIBRARY_NAME}
         APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
+endif()
 
 # Version information
 configure_file(${PROJECT_NAME}ConfigVersion.cmake.in
@@ -744,9 +748,10 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
 # Add package to CMake package registery for use from the build tree
 option( EXPORT_${PROJECT_NAME}
   "Should the ${PROJECT_NAME} package be exported for use by other software" ON )
-
-if( EXPORT_${PROJECT_NAME} )
-  export( PACKAGE ${PROJECT_NAME} )
+if(PANGOLIN_MASTER_PROJECT)
+  if( EXPORT_${PROJECT_NAME} )
+    export( PACKAGE ${PROJECT_NAME} )
+  endif()
 endif()
 
 #######################################################
@@ -759,7 +764,7 @@ install(DIRECTORY ${INCDIR}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}
 )
 install(TARGETS ${LIBRARY_NAME}
-  EXPORT ${PROJECT_NAME}Targets
+  EXPORT ${PANGOLIN_EXPORT_NAME}
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
@@ -773,6 +778,10 @@ install(
           "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
     DESTINATION ${CMAKECONFIG_INSTALL_DIR}
 )
-install(
-    EXPORT ${PROJECT_NAME}Targets DESTINATION ${CMAKECONFIG_INSTALL_DIR}
-)
+if(PANGOLIN_MASTER_PROJECT)
+  install(
+      EXPORT ${PANGOLIN_EXPORT_NAME}
+      NAMESPACE "${PROJECT_NAME}::"
+      DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+  )
+endif()
